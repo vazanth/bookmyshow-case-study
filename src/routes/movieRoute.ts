@@ -5,6 +5,7 @@ import {
   fetchMovies,
   updateMovies,
   getAllTheatersForMovie,
+  fetchMovieInfo,
 } from '@/controller/movieController';
 import { movieBodySchema, movieParamSchema } from '@/schema/movieSchema';
 import { DateRangeSchema, paginateSchema, titleQuerySchema } from '@/schema/commonSchema';
@@ -26,6 +27,7 @@ const movieRoute = async (app: FastifyInstance) => {
       },
       fetchMovies,
     );
+  app.get('/:movie_id/info', { schema: { params: movieParamSchema } }, fetchMovieInfo);
   app
     .patch(
       '/:movie_id',
