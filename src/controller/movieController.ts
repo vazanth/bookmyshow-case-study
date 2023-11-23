@@ -144,3 +144,22 @@ export const getAllTheatersForMovie = async (request: FastifyRequest, reply: Fas
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 };
+
+export const fetchMovieInfo = async (request: FastifyRequest, reply: FastifyReply) => {
+  const { movie_id } = request.params as MovieQueryParam;
+
+  try {
+    const query = `SELECT m.movie_name, m.language, mi.director, mi.certificate, mi.genere, mi.release_date, mi.format, mi.description FROM movie_info mi inner join movies m on m.movie_id = mi.movie_id where m.movie_id = ?;`;
+
+    const movieInfo = await dbRepo.fetchComplexRows(query, [movie_id]);
+
+    if (!movieInfo) {
+      reply.send(new AppResponse(commonResponseMessages.NOT_FOUND));
+      return;
+    }
+
+    reply.send(new AppResponse(commonResponseMessages.FETCHED_SUCCESSFULLY, movieInfo));
+  } catch (error) {
+    reply.code(500).send({ error: 'Internal Server Error' });
+  }
+};

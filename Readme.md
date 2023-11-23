@@ -8,6 +8,7 @@ This Node.js Fastify application functions as a RESTful API for the bookmyshow c
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Data Modelling](#datamodel)
 - [Validation](#validation)
 - [Endpoints](#endpoints)
 
@@ -47,6 +48,12 @@ npm install
 npm run dev
 ```
 
+# Data Model
+
+<img loading="lazy" src="./data-modelling.png" alt="data modelling" />
+
+Check the sql folder for db queries related to table creation, constraints and procedures
+
 # Usage
 
 You can browse the apis at <http://localhost:3000> using either in postman or curl or any api platform
@@ -63,6 +70,7 @@ This project uses the inbuilt validator of fastify and also since typescript is 
 | `POST /api/users/sign-in`                    | log in a new user.                              | [sign-in](#sign-in)               |
 | `POST api/theaters/movies/search?title=star` | Get movies for a theater based on title search. | [theater_search](#theater_search) |
 | `POST api/movies/theaters/search?title=the`  | Get theaters for movies based on title search.  | [movie_search](#movie_search)     |
+| `POST api/movies/100/info`                   | Get Movie Information                           |                                   |
 | `POST api/booking`                           | Initiate Booking for a show                     | [init_bookig](#init_booking)      |
 | `POST api/cities`                            | Add a new city.                                 | [add_city](#add_city)             |
 | `DELETE api/cities/113`                      | Delete a city by ID.                            |                                   |
