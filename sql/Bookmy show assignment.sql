@@ -1,4 +1,4 @@
--- Table Creation
+-- # Table Creation
 CREATE TABLE `cities` (
   `city_id` bigint PRIMARY KEY AUTO_INCREMENT,
   `city_name` varchar(255) NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE `bookings` (
 );
 
 
--- Table Constraints
+-- # Table Constraints
 
 ALTER TABLE `users` ADD FOREIGN KEY (`city_id`) REFERENCES `cities` (`city_id`);
 
@@ -116,10 +116,9 @@ ALTER TABLE `bookings` ADD FOREIGN KEY (`show_time_id`) REFERENCES `show_time` (
 
 ALTER TABLE `seats` ADD FOREIGN KEY (`show_time_id`) REFERENCES `show_time` (`show_time_id`);
 
--- Table Indexing
+-- # Table Indexing
 
 -- Indexing show_time table's below columns has we have two queries which is heavily joined in fetching movies running in a theater or list of theaters for a movie which is a very frequent operation.
-
 CREATE INDEX idx_movie_theater_screen_id
 ON show_time (`movie_id`, `theater_id`, `screen_id` );
 
@@ -127,8 +126,9 @@ ON show_time (`movie_id`, `theater_id`, `screen_id` );
 -- Indexed movie_id column in movie_info table since we fetch movie information which would be displayed to user before they proceed with ticket booking
 CREATE INDEX idx_movie_id ON movie_info(`movie_id`);
 
+-- Also have created index on seat table, index named unique_seat for columns `show_time_id`, `row_letter`, `seat_number` which helps in filtering of booked seats query
 
--- Stored Procedure
+-- # Stored Procedure
 
 -- Responsible for archiving seats after show completion, deletes after 1hr of show's end time
 CREATE DEFINER=`root`@`localhost` PROCEDURE `RemoveExpiredSeatsProcedure`()

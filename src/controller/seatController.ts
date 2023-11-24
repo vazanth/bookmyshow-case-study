@@ -2,8 +2,8 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import schedule from 'node-schedule';
 import DBRepository from '@/repository/DBRepository';
 import AppResponse from '@/helpers/AppResponse';
-import { commonResponseMessages } from '@/constants';
-import { SeatBody, SeatParams } from '@/types/seat';
+import { TTL_EXPIRATION, commonResponseMessages } from '@/constants';
+import { BookedSeats, FetchSeatMaster, SeatBody, SeatParams } from '@/types/seat';
 import { CronBody } from '@/types';
 
 const dbRepo = new DBRepository();
@@ -20,18 +20,40 @@ let scheduledTask: schedule.Job | null = null;
 export const fetchSeatsForShowTime = async (request: FastifyRequest, reply: FastifyReply) => {
   const { show_time_id } = request.params as SeatParams;
 
+  const cache = request.app.cacheRepository;
+
+  let seatMaster = await cache?.get(`seat_master/${show_time_id}`);
+
   try {
-    const result = await dbRepo.fetchRows(
-      {
-        tableName: 'seats',
-        conditions: 'show_time_id=?',
-        orderBy: 'actual_seat_no',
-        limit: undefined,
-        offset: undefined,
-        columns: ['show_time_id', 'actual_seat_no'],
-      },
-      [show_time_id],
-    );
+    if (!seatMaster) {
+      seatMaster = await dbRepo.fetchRows(
+        {
+          tableName: 'seats',
+          conditions: 'show_time_id=?',
+          orderBy: 'actual_seat_no',
+          limit: undefined,
+          offset: undefined,
+          columns: ['show_time_id', 'actual_seat_no'],
+        },
+        [show_time_id],
+      );
+
+      await cache?.set(`seat_master/${show_time_id}`, seatMaster, TTL_EXPIRATION.SEVEN_DAYS);
+    }
+
+    const query = `SELECT s.actual_seat_no
+    FROM seats s
+    LEFT JOIN bookings b ON s.show_time_id = b.show_time_id AND FIND_IN_SET(s.actual_seat_no, b.seat_no) > 0
+    WHERE s.show_time_id = ? AND b.booking_id IS NULL;`;
+
+    const bookedSeats = await dbRepo.fetchComplexRows(query, [show_time_id]);
+
+    const result = seatMaster.map((masterSeat: FetchSeatMaster) => {
+      const isBooked = bookedSeats.some(
+        (bookedSeat: BookedSeats) => bookedSeat.actual_seat_no === masterSeat.actual_seat_no,
+      );
+      return { seat_no: masterSeat.actual_seat_no, is_booked: !isBooked };
+    });
 
     reply.send(new AppResponse(commonResponseMessages.FETCHED_SUCCESSFULLY, result));
   } catch (error) {

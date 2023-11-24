@@ -47,6 +47,7 @@
  * Discard above class
  */
 
+import { TTL_EXPIRATION } from '@/constants';
 import db from '@/database/db';
 import {
   QueryOptions,
@@ -55,6 +56,7 @@ import {
   DeleteOptions,
   TransactBookingOptions,
 } from '@/types';
+import { FetchSeatMaster } from '@/types/seat';
 
 class DBRepository {
   private database;
@@ -138,25 +140,33 @@ class DBRepository {
   }
 
   async initBooking(options: TransactBookingOptions) {
-    const { user_id, no_of_tickets, seat_no, show_time_id } = options;
+    const { user_id, no_of_tickets, seat_no, show_time_id, cache } = options;
 
+    let cachedTicketPrice = await cache?.get(`ticket_price/${show_time_id}`);
+
+    const seatMaster: FetchSeatMaster[] = await cache?.get(`seat_master/${show_time_id}`);
+
+    const seatCount = seat_no
+      .split(',')
+      .every((value) => seatMaster.some((obj) => obj.actual_seat_no === value));
     const connection = await this.database.getConnection();
 
     try {
       await connection.beginTransaction();
 
-      const placeholders = seat_no
-        .split(',')
-        .map(() => '?')
-        .join(',');
+      // verify if the seat exists -> could be cached
 
-      const modified_seat_no = seat_no.split(',');
+      // const placeholders = seat_no
+      //   .split(',')
+      //   .map(() => '?')
+      //   .join(',');
 
-      // verify if the seat exists
-      const [seatCount]: any = await connection.execute(
-        `SELECT COUNT(*) as count FROM seats WHERE actual_seat_no in (${placeholders}) AND show_time_id = ?`,
-        [...modified_seat_no, show_time_id],
-      );
+      // const modified_seat_no = seat_no.split(',');
+
+      // const [seatCount]: any = await connection.execute(
+      //   `SELECT COUNT(*) as count FROM seats WHERE actual_seat_no in (${placeholders}) AND show_time_id = ?`,
+      //   [...modified_seat_no, show_time_id],
+      // );
 
       const [bookedSeats]: any = await connection.execute(
         'SELECT seat_no FROM bookings WHERE show_time_id = ?',
@@ -169,18 +179,27 @@ class DBRepository {
         .flat()
         .filter((bookedSeat: any) => seat_no.split(',').includes(bookedSeat));
 
-      if (seatCount[0].count > 0 && conflictingSeats.length === 0) {
-        // Get movie information including ticket_price
-        const [movieInfo]: any = await connection.execute(
-          `SELECT mi.ticket_price 
-          FROM movie_info mi
-          INNER JOIN
-          show_time st ON st.movie_id = mi.movie_id
-          WHERE st.show_time_id = ?`,
-          [show_time_id],
-        );
+      if (seatCount && conflictingSeats.length === 0) {
+        // Get movie information including ticket_price --> could be cached
+        if (!cachedTicketPrice) {
+          const [movieInfo]: any = await connection.execute(
+            `SELECT mi.ticket_price 
+            FROM movie_info mi
+            INNER JOIN
+            show_time st ON st.movie_id = mi.movie_id
+            WHERE st.show_time_id = ?`,
+            [show_time_id],
+          );
 
-        const ticketPrice = movieInfo[0].ticket_price;
+          await cache?.set(
+            `ticket_price/${show_time_id}`,
+            movieInfo[0].ticket_price,
+            TTL_EXPIRATION.THREE_HOUR,
+          ); // ttl set for 3hrs
+          cachedTicketPrice = movieInfo[0].ticket_price;
+        }
+
+        const ticketPrice = cachedTicketPrice;
 
         // Calculate tot_amount
         const totAmount = Number(ticketPrice) * no_of_tickets;

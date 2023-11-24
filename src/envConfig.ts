@@ -16,4 +16,7 @@ export const env: EnvConfig = {
   DIALECT: process.env.DIALECT || '',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '',
   JWT_SECRET_KEY: process.env.JWT_SECRET_KEY || '',
+  REDIS_HOST: process.env.REDIS_HOST || '',
+  REDIS_PORT: parseInt(process.env.REDIS_PORT || '', 10),
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD || '',
 };

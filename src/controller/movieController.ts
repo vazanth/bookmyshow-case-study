@@ -8,10 +8,9 @@ import {
   PaginationParam,
   TitleQueryParam,
 } from '@/types';
-import { commonResponseMessages } from '@/constants';
+import { TTL_EXPIRATION, commonResponseMessages } from '@/constants';
 
 const dbRepo = new DBRepository();
-
 /**
  * @description
  * Handles movies creation within our database, restricted for admin users.
@@ -117,6 +116,10 @@ export const deleteMovies = async (request: FastifyRequest, reply: FastifyReply)
   }
 };
 
+/**
+ * @description
+ * Fetches all the theaters where a particular movie is running along with show time
+ */
 export const getAllTheatersForMovie = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const { title } = request.query as TitleQueryParam;
@@ -134,10 +137,14 @@ export const getAllTheatersForMovie = async (request: FastifyRequest, reply: Fas
 
     const movieList = await dbRepo.fetchComplexRows(query, [`%${title}%`, from_date, to_date]);
 
+    const cache = request.app.cacheRepository;
+
     if (!movieList) {
       reply.send(new AppResponse(commonResponseMessages.NOT_FOUND));
       return;
     }
+
+    await cache?.set(`theater_list_for_movie/${title}`, movieList, TTL_EXPIRATION.ONE_DAY);
 
     reply.send(new AppResponse(commonResponseMessages.FETCHED_SUCCESSFULLY, movieList));
   } catch (error) {
@@ -145,6 +152,10 @@ export const getAllTheatersForMovie = async (request: FastifyRequest, reply: Fas
   }
 };
 
+/**
+ * @description
+ * Fetches the information of a movie
+ */
 export const fetchMovieInfo = async (request: FastifyRequest, reply: FastifyReply) => {
   const { movie_id } = request.params as MovieQueryParam;
 
@@ -153,10 +164,14 @@ export const fetchMovieInfo = async (request: FastifyRequest, reply: FastifyRepl
 
     const movieInfo = await dbRepo.fetchComplexRows(query, [movie_id]);
 
+    const cache = request.app.cacheRepository;
+
     if (!movieInfo) {
       reply.send(new AppResponse(commonResponseMessages.NOT_FOUND));
       return;
     }
+
+    await cache?.set(`movie_info/${movie_id}`, movieInfo, TTL_EXPIRATION.SEVEN_DAYS);
 
     reply.send(new AppResponse(commonResponseMessages.FETCHED_SUCCESSFULLY, movieInfo));
   } catch (error) {

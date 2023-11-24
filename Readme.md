@@ -18,6 +18,7 @@ This Node.js Fastify application functions as a RESTful API for the bookmyshow c
 - Role-Based Access Control (RBAC): Admin users are granted exclusive access to run scheduled tasks(clean up activity of seats) maintian application data.
 - Admin Intercation: Admin user's can maintain the application data has full access (CRUD) operations.
 - User Interactions: Users can search for a particular movie via a theater or find theater via a movie and get their info and proceed to booking.
+- Caching: Data fetched from APIs are cached using Redis for optimized performance.
 
 ## Prerequisites
 
@@ -139,13 +140,13 @@ This project uses the inbuilt validator of fastify and also since typescript is 
 # add_movie
 
 ```json
-`{ "movie_name": "XXX", "language": "English" }`
+`{ "movie_name": "The Empire Strikes Back", "language": "English" }`
 ```
 
 # upd_movie
 
 ```json
-`{ "movie_name": "XXX-Is Back", "language": "English" }`
+`{ "movie_name": "Revenge of the Sith", "language": "English" }`
 ```
 
 # add_seats

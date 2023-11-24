@@ -12,6 +12,9 @@ export type EnvConfig = {
   DIALECT: string;
   JWT_SECRET_KEY: string;
   JWT_EXPIRES_IN: string;
+  REDIS_HOST: string;
+  REDIS_PORT: number;
+  REDIS_PASSWORD: string;
 };
 
 export type CustomResponse = {
@@ -80,14 +83,24 @@ export type DeleteOptions = Omit<Omit<InsertOptions, 'values'>, 'conditions'> & 
 
 export type TransactBookingOptions = BookingRequestBody & {
   user_id: number;
+  cache: any;
+};
+
+export type RedisCacheOptions = {
+  host: string;
+  port: number;
+  family: number;
 };
 
 declare module 'fastify' {
   interface FastifyRequest {
     jwt: JWT;
+    app: any;
   }
   export interface FastifyInstance {
     authenticate: any;
+    checkCache: any;
     restrictTo: any;
+    cacheRepository: any;
   }
 }
