@@ -1,12 +1,13 @@
 /* eslint-disable consistent-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { commonResponseMessages } from '@/constants';
+import * as jwt from 'jsonwebtoken';
 import { env } from '@/envConfig';
 import AppResponse from '@/helpers/AppResponse';
-import * as jwt from 'jsonwebtoken';
 import db from '@/database/db';
+import { generateCacheKey } from '@/middleware/cacheKeyGen';
 import { CustomRequest, UserMap } from '@/types';
+import { commonResponseMessages } from '@/constants';
 
 const { JWT_SECRET_KEY } = env;
 
@@ -48,4 +49,19 @@ export const decorateFastifyInstance = (app: FastifyInstance): void => {
       }
     };
   });
+
+  app.decorate(
+    'checkCache',
+    (uniqueKey: string) => async (request: FastifyRequest & CustomRequest, reply: FastifyReply) => {
+      const cacheKey = generateCacheKey(uniqueKey, request.params, request.query);
+
+      const cache = app?.cacheRepository;
+
+      const cachedData = await cache?.get(cacheKey);
+
+      if (cachedData) {
+        return reply.send(new AppResponse(commonResponseMessages.FETCHED_SUCCESSFULLY, cachedData));
+      }
+    },
+  );
 };

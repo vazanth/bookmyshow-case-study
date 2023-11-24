@@ -11,6 +11,7 @@ import { movieBodySchema, movieParamSchema } from '@/schema/movieSchema';
 import { DateRangeSchema, paginateSchema, titleQuerySchema } from '@/schema/commonSchema';
 
 const movieRoute = async (app: FastifyInstance) => {
+  // Routes for app data maintenance
   app
     .post(
       '/',
@@ -27,7 +28,6 @@ const movieRoute = async (app: FastifyInstance) => {
       },
       fetchMovies,
     );
-  app.get('/:movie_id/info', { schema: { params: movieParamSchema } }, fetchMovieInfo);
   app
     .patch(
       '/:movie_id',
@@ -45,10 +45,25 @@ const movieRoute = async (app: FastifyInstance) => {
       },
       deleteMovies,
     );
+
+  // Routes for end customers
   app.post(
     '/theaters/search',
-    { schema: { querystring: titleQuerySchema, body: DateRangeSchema } },
+    {
+      schema: {
+        querystring: titleQuerySchema,
+        body: DateRangeSchema,
+      },
+      preHandler: [app.checkCache('theater_list_for_movie')],
+    },
     getAllTheatersForMovie,
+  );
+
+  // fetch the movie information
+  app.get(
+    '/:movie_id/info',
+    { schema: { params: movieParamSchema }, preHandler: [app.checkCache('movie_info')] },
+    fetchMovieInfo,
   );
 };
 

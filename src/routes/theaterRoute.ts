@@ -10,6 +10,7 @@ import { getTheatersSchema, theaterParamSchema, theaterBodySchema } from '@/sche
 import { DateRangeSchema, titleQuerySchema } from '@/schema/commonSchema';
 
 const theaterRoute = async (app: FastifyInstance) => {
+  // Routes for app data maintenance
   app
     .get(
       '/',
@@ -43,9 +44,14 @@ const theaterRoute = async (app: FastifyInstance) => {
       },
       deleteTheaters,
     );
+
+  // Routes for end customers
   app.post(
     '/movies/search',
-    { schema: { querystring: titleQuerySchema, body: DateRangeSchema } },
+    {
+      schema: { querystring: titleQuerySchema, body: DateRangeSchema },
+      preHandler: [app.checkCache('movie_list_for_theater')],
+    },
     getAllMoviesInTheater,
   );
 };

@@ -54,4 +54,10 @@ const statusMappings = {
   ARTICLE_EXIST: 409,
 };
 
-export { commonResponseMessages, statusMappings };
+const TTL_EXPIRATION = {
+  ONE_DAY: Math.floor(Date.now() / 1000) + 1 * 24 * 60 * 60,
+  SEVEN_DAYS: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+  THREE_HOUR: Math.floor(Date.now() / 1000) + 3 * 60 * 60,
+};
+
+export { commonResponseMessages, statusMappings, TTL_EXPIRATION };

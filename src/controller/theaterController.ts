@@ -8,7 +8,7 @@ import {
   TheaterReqBody,
   TitleQueryParam,
 } from '@/types';
-import { commonResponseMessages } from '@/constants';
+import { TTL_EXPIRATION, commonResponseMessages } from '@/constants';
 
 const dbRepo = new DBRepository();
 
@@ -123,6 +123,10 @@ export const deleteTheaters = async (request: FastifyRequest, reply: FastifyRepl
   }
 };
 
+/**
+ * @description
+ * Fetches all the Movies, in a particular theater and their show times
+ */
 export const getAllMoviesInTheater = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const { title } = request.query as TitleQueryParam;
@@ -140,10 +144,14 @@ export const getAllMoviesInTheater = async (request: FastifyRequest, reply: Fast
 
     const movieList = await dbRepo.fetchComplexRows(query, [`%${title}%`, from_date, to_date]);
 
+    const cache = request.app.cacheRepository;
+
     if (!movieList) {
       reply.send(new AppResponse(commonResponseMessages.NOT_FOUND));
       return;
     }
+
+    await cache?.set(`movie_list_for_theater/${title}`, movieList, TTL_EXPIRATION.ONE_DAY);
 
     reply.send(new AppResponse(commonResponseMessages.FETCHED_SUCCESSFULLY, movieList));
   } catch (error) {
