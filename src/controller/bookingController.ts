@@ -25,3 +25,45 @@ export const initiateBooking = async (request: FastifyRequest, reply: FastifyRep
     }
   }
 };
+
+export const createPayment = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { stripe } = request;
+
+    const payload = request.body;
+
+    const paymentIntent = await stripe.paymentIntents.create(payload);
+    reply.send(
+      new AppResponse(commonResponseMessages.CREATED_SUCCESSFULLY, {
+        client_secret: paymentIntent.client_secret,
+      }),
+    );
+  } catch (error) {
+    console.log('err', error);
+    reply.code(500).send({ error: 'Internal Server Error' });
+  }
+};
+
+export const paymentCompletion = async (request: FastifyRequest, reply: FastifyReply) => {
+  const payload = request.body;
+  const sig = request.headers['stripe-signature'];
+  const { stripe } = request;
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(payload, sig, process.env.STRIPE_KEY || '');
+  } catch (error) {
+    if (error instanceof Error) {
+      reply.send(new AppResponse(error.message));
+    } else {
+      reply.code(500).send({ error: 'Internal Server Error' });
+    }
+  }
+
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
+    // Update your MySQL table based on paymentIntent information
+    console.log('PaymentIntent was successful!', paymentIntent);
+  }
+};

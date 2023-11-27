@@ -22,9 +22,11 @@
     "@": "src"
   },
   "dependencies": {
+    "@fastify/cors": "^8.4.1",
     "@fastify/helmet": "^11.1.1",
     "@fastify/jwt": "^7.2.3",
     "@fastify/redis": "^6.1.1",
+    "@fastify/static": "^6.2.0",
     "argon2": "^0.31.2",
     "dotenv": "^16.3.1",
     "eslint-config-airbnb-typescript": "^17.1.0",
@@ -33,7 +35,8 @@
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "mysql2": "^3.6.3",
-    "node-schedule": "^2.1.1"
+    "node-schedule": "^2.1.1",
+    "stripe": "^14.5.0"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.5",

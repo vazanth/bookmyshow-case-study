@@ -96,6 +96,7 @@ declare module 'fastify' {
   interface FastifyRequest {
     jwt: JWT;
     app: any;
+    stripe: any;
   }
   export interface FastifyInstance {
     authenticate: any;

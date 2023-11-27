@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { initiateBooking } from '@/controller/bookingController';
+import { initiateBooking, createPayment, paymentCompletion } from '@/controller/bookingController';
 import { bookingBodySchema } from '@/schema/bookingSchema';
 
 const bookingRoute = async (app: FastifyInstance) => {
@@ -8,6 +8,9 @@ const bookingRoute = async (app: FastifyInstance) => {
     { preHandler: [app.authenticate], schema: { body: bookingBodySchema } },
     initiateBooking,
   );
+  app.post('/create-payment-intent', createPayment);
+
+  app.post('/webhook', paymentCompletion);
 };
 
 export default bookingRoute;
