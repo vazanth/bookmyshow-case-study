@@ -139,3 +139,84 @@ BEGIN
   INNER JOIN show_time ON seats.show_time_id = show_time.show_time_id
   WHERE ADDTIME(show_time.end_time, '01:00:00') <= NOW();
 END
+
+-- Responsbile for ticket booking an alternative for js level transactions
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InitBooking`(
+	IN p_user_id INT, 
+    IN p_no_of_tickets INT, 
+    IN p_seat_no VARCHAR(255),
+    IN p_show_time_id INT
+)
+BEGIN
+  DECLARE seat_count INT;
+  DECLARE booked_seats INT;
+  DECLARE current_seat VARCHAR(255);
+  DECLARE ticket_price VARCHAR(255);
+  DECLARE i INT DEFAULT 1;
+  
+-- Start a transaction
+  START TRANSACTION;
+
+-- check for valid seat  
+SELECT 
+    COUNT(*)
+INTO seat_count FROM
+    seats
+WHERE
+    actual_seat_no IN (seat_no)
+        AND show_time_id = p_show_time_id;
+ 
+ -- get the booked seats for the show time
+-- Loop to check each seat in p_seat_no
+  seat_loop: LOOP
+    -- Get the current seat
+    SET current_seat = SUBSTRING_INDEX(SUBSTRING_INDEX(p_seat_no, ',', i), ',', -1);
+
+    -- Exit the loop if there are no more seats
+    IF current_seat = '' THEN
+      LEAVE seat_loop;
+    END IF;
+
+    -- Check if the seat is already booked in the booking table
+    SELECT COUNT(*) INTO booked_seats
+    FROM bookings
+    WHERE FIND_IN_SET(current_seat, seat_no) > 0 AND show_time_id = p_show_time_id;
+
+    -- Exit the loop if there is a conflicting seat
+    IF booked_seatas > 0 THEN
+      LEAVE seat_loop;
+    END IF;
+
+    -- Increment the loop counter
+    SET i = i + 1;
+  END LOOP;
+
+  IF seat_count > 0 AND booked_seats = 0 THEN
+  -- get the ticket price for the move
+    SELECT mi.ticket_price INTO ticket_price
+            FROM movie_info mi
+            INNER JOIN
+            show_time st ON st.movie_id = mi.movie_id
+            WHERE st.show_time_id = p_show_time_id;
+    
+    -- Perform soft booking with is_complete set to false
+    INSERT INTO bookings (show_time_id, user_id, no_of_tickets, seat_no, tot_amount)
+    VALUES (p_show_time_id, p_user_id, p_no_of_tickets, p_seat_no, ticket_price * p_no_of_tickets);
+
+    -- Commit the transaction
+    COMMIT;
+  ELSE
+    -- Rollback the transaction
+    ROLLBACK;
+
+    -- Raise an error based on conditions
+    IF booked_seats > 0 THEN
+      SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Seats selected are not available anymore';
+    ELSE
+      SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Please select valid seats no';
+    END IF;
+  END IF;
+END
