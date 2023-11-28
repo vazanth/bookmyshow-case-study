@@ -168,7 +168,7 @@ This project uses the inbuilt validator of fastify and also since typescript is 
 # remove_shows
 
 ```json
-{"hourly": 23}`
+{"hourly": 23}
 ```
 
 # add_theate
