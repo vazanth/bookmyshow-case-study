@@ -88,7 +88,8 @@ CREATE TABLE `bookings` (
   `no_of_tickets` integer NOT NULL,
   `seat_no` varchar(255) NOT NULL,
   `tot_amount` integer NOT NULL,
-  `bookings` boolean default false,
+  `is_completed` boolean DEFAULT false,
+  `payment_intent` varchar(255),
   `created_at` timestamp DEFAULT (now()),
   `updated_at` timestamp DEFAULT (now())
 );

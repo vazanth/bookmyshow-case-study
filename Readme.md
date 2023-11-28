@@ -19,6 +19,8 @@ This Node.js Fastify application functions as a RESTful API for the bookmyshow c
 - Admin Intercation: Admin user's can maintain the application data has full access (CRUD) operations.
 - User Interactions: Users can search for a particular movie via a theater or find theater via a movie and get their info and proceed to booking.
 - Caching: Data fetched from APIs are cached using Redis for optimized performance.
+- Payment: Using stripe for payment gateway and included webhooks for further operations in our db when payment completes
+- Simple UI only for stripe payment integration is avaialble
 
 ## Prerequisites
 
@@ -49,9 +51,15 @@ npm install
 npm run dev
 ```
 
+5. For Stripe setup create an account in stripe and create a publisher and secret key. Secret key belongs with server and publisher key with client
+
+6. For webhook setup we need a real url, it wont work with localhost, so either use their cli for local testing or setup ngork and configure that url in webhook, screenshot below
+
+<img loading="lazy" src="./public/stripe-sample.png" alt="stripe-sample" />
+
 # Data Model
 
-<img loading="lazy" src="./data-modelling.png" alt="data modelling" />
+<img loading="lazy" src="./public/data-modelling.png" alt="data modelling" />
 
 Check the sql folder for db queries related to table creation, constraints and procedures
 
@@ -73,6 +81,8 @@ This project uses the inbuilt validator of fastify and also since typescript is 
 | `POST api/movies/theaters/search?title=the`  | Get theaters for movies based on title search.  | [movie_search](#movie_search)     |
 | `POST api/movies/100/info`                   | Get Movie Information                           |                                   |
 | `POST api/booking`                           | Initiate Booking for a show                     | [init_bookig](#init_booking)      |
+| `POST api/booking/create-payment-intent`     | Creates a intent from front end screen          | [intent](#intent)                 |
+| `POST api/booking/webhook`                   | setup webhook in stripe for events              | payload will be passed by stripe  |
 | `POST api/cities`                            | Add a new city.                                 | [add_city](#add_city)             |
 | `DELETE api/cities/113`                      | Delete a city by ID.                            |                                   |
 | `GET api/cities?limit=3&offset=5`            | Fetch cities with pagination.                   |                                   |
@@ -128,53 +138,59 @@ This project uses the inbuilt validator of fastify and also since typescript is 
 # add-city
 
 ```json
-`{ "city_name": "New Mexico" }`
+{ "city_name": "New Mexico" }
 ```
 
 # upd_city
 
 ```json
-`{ "city_name": "New York" }`
+{ "city_name": "New York" }
 ```
 
 # add_movie
 
 ```json
-`{ "movie_name": "The Empire Strikes Back", "language": "English" }`
+{ "movie_name": "The Empire Strikes Back", "language": "English" }
 ```
 
 # upd_movie
 
 ```json
-`{ "movie_name": "Revenge of the Sith", "language": "English" }`
+{ "movie_name": "Revenge of the Sith", "language": "English" }
 ```
 
 # add_seats
 
 ```json
-`{"show_time_id": 117, "seat_number": 1,"row_letter": "D"}`
+{ "show_time_id": 117, "seat_number": 1, "row_letter": "D" }
 ```
 
 # remove_shows
 
 ```json
-`{"hourly": 23}`
+{"hourly": 23}`
 ```
 
-# add_theater
+# add_theate
 
 ```json
-`{ "theater_name": "The Empire Strikes Back", "city_id": 0, "no_of_screens": 6 }`
+{ "theater_name": "The Empire Strikes Back", "city_id": 0, "no_of_screens": 6 }
 ```
 
 # upd_theater
 
 ```json
-`{ "city_id": 0, "theater_name": "Star Cinemazz", "no_of_screens": 3 }`
+{ "city_id": 0, "theater_name": "Star Cinemazz", "no_of_screens": 3 }
 ```
 
 # init_booking
 
 ```json
-`{"show_time_id": 101,"seat_no": "A001,A002", "no_of_tickets": 3}`
+{ "show_time_id": 101, "seat_no": "A001,A002", "no_of_tickets": 3 }
+```
+
+# intent
+
+```json
+{ "payment_method_types": ["card"], "booking_id": 1, "amount": 1000, "currency": "inr" }
 ```

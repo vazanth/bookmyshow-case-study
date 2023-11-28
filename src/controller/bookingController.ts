@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import DBRepository from '@/repository/DBRepository';
 import AppResponse from '@/helpers/AppResponse';
 import { commonResponseMessages } from '@/constants';
-import { BookingRequestBody } from '@/types/booking';
+import { BookingRequestBody, PaymentRequestBody } from '@/types/booking';
 import { UserMap } from '@/types';
 
 const dbRepo = new DBRepository();
@@ -30,40 +30,53 @@ export const createPayment = async (request: FastifyRequest, reply: FastifyReply
   try {
     const { stripe } = request;
 
-    const payload = request.body;
+    const { booking_id, ...rest } = request.body as PaymentRequestBody;
 
-    const paymentIntent = await stripe.paymentIntents.create(payload);
+    const paymentIntent = await stripe.paymentIntents.create(rest);
+
+    if (paymentIntent.id) {
+      await dbRepo.updateRows({
+        tableName: 'bookings',
+        values: {
+          payment_intent: paymentIntent.id,
+        },
+        conditions: {
+          booking_id,
+        },
+      });
+    }
     reply.send(
       new AppResponse(commonResponseMessages.CREATED_SUCCESSFULLY, {
         client_secret: paymentIntent.client_secret,
       }),
     );
   } catch (error) {
-    console.log('err', error);
     reply.code(500).send({ error: 'Internal Server Error' });
   }
 };
 
 export const paymentCompletion = async (request: FastifyRequest, reply: FastifyReply) => {
-  const payload = request.body;
-  const sig = request.headers['stripe-signature'];
-  const { stripe } = request;
-
-  let event;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const event: any = request.body;
 
   try {
-    event = stripe.webhooks.constructEvent(payload, sig, process.env.STRIPE_KEY || '');
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object;
+      await dbRepo.updateRows({
+        tableName: 'bookings',
+        values: {
+          is_completed: true,
+        },
+        conditions: {
+          payment_intent: paymentIntent.id,
+        },
+      });
+    }
   } catch (error) {
     if (error instanceof Error) {
       reply.send(new AppResponse(error.message));
     } else {
       reply.code(500).send({ error: 'Internal Server Error' });
     }
-  }
-
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object;
-    // Update your MySQL table based on paymentIntent information
-    console.log('PaymentIntent was successful!', paymentIntent);
   }
 };

@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       body: JSON.stringify({
         payment_method_types: ['card'],
-        amount: 1000,
+        booking_id: 1, //hardcoded on front end but data can be fetched and passed here
+        amount: 1000, //hardcoded on front end but data can be fetched and passed here
         currency: 'inr',
       }),
     })

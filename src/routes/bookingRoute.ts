@@ -8,7 +8,11 @@ const bookingRoute = async (app: FastifyInstance) => {
     { preHandler: [app.authenticate], schema: { body: bookingBodySchema } },
     initiateBooking,
   );
-  app.post('/create-payment-intent', createPayment);
+  app.post(
+    '/create-payment-intent',
+    { preHandler: [app.authenticate], schema: { body: bookingBodySchema } },
+    createPayment,
+  );
 
   app.post('/webhook', paymentCompletion);
 };

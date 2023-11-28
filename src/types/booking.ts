@@ -3,3 +3,10 @@ export type BookingRequestBody = {
   no_of_tickets: number;
   seat_no: string;
 };
+
+export type PaymentRequestBody = {
+  payment_method_types: string[];
+  booking_id: number;
+  amount: number;
+  currency: string;
+};
