@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import fastify, { FastifyRequest, HookHandlerDoneFunction } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fjwt from '@fastify/jwt';
@@ -27,11 +26,12 @@ app.register(fastifyStatic, {
   prefix: '/public',
 });
 
-// const cacheRepository = new CacheManager(app, {
-//   host: REDIS_HOST,
-//   port: REDIS_PORT,
-//   family: 4,
-// });
+const cacheRepository = new CacheManager(app, {
+  host: REDIS_HOST,
+  port: REDIS_PORT,
+  family: 4,
+});
+
 // registering helmet for endpoint protection
 app.register(helmet, {
   contentSecurityPolicy: {
@@ -39,7 +39,6 @@ app.register(helmet, {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", 'https://js.stripe.com'],
       frameSrc: ['https://js.stripe.com'],
-      // Add other directives as needed
     },
   },
 });
@@ -53,7 +52,7 @@ app.register(fastifyCors, {
 // registering jwt token to fastify instance
 app.register(fjwt, { secret: process.env.JWT_SECRET_KEY || '' });
 
-// app.decorate('cacheRepository', cacheRepository);
+app.decorate('cacheRepository', cacheRepository);
 
 const stripeInstance = new Stripe(process.env.STRIPE_KEY || '');
 
@@ -71,6 +70,11 @@ app.addHook('preHandler', (request: FastifyRequest, res, next: HookHandlerDoneFu
   return next();
 });
 
+// for default endpoint expose to ngork
+app.get('/', (_, reply) => {
+  reply.send('Hello There');
+});
+
 // api endpoint routes
 app.register(userRoute, { prefix: '/api/users' });
 
@@ -86,8 +90,8 @@ app.register(bookingRoute, { prefix: '/api/bookings' });
 
 // Common response hook for response modification from controller
 app.addHook('onSend', (request, reply, payload: string, done) => {
-  // Check if the request is for serving static files
-  if (request.url && request.url.startsWith('/public')) {
+  // Check if the request is for serving static files if so dont modify
+  if ((request.url && request.url.startsWith('/public')) || request.url === '/') {
     // Skip the hook for static files
     return done(null, payload);
   }
