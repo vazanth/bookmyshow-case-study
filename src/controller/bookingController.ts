@@ -14,8 +14,11 @@ export const initiateBooking = async (request: FastifyRequest, reply: FastifyRep
 
   const cache = request.app.cacheRepository;
 
+  // const params = [user_id, no_of_tickets, seat_no, show_time_id];
+
   try {
     await dbRepo.initBooking({ show_time_id, seat_no, no_of_tickets, user_id, cache });
+    // await dbRepo.executeStoredProcedure('InitBooking', params);
     reply.send(new AppResponse(commonResponseMessages.CREATED_SUCCESSFULLY));
   } catch (error) {
     if (error instanceof Error) {

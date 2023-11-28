@@ -135,7 +135,12 @@ class DBRepository {
     return this.executeQuery(query, bindings);
   }
 
-  async executeStoredProcedure(procedureName: string) {
+  async executeStoredProcedure(procedureName: string, params?: any[]) {
+    if (params) {
+      const placeholders = params.map(() => '?').join(', ');
+      const query = `CALL ${procedureName}(${placeholders})`;
+      return this.executeQuery(query, params);
+    }
     return this.executeQuery(procedureName);
   }
 
