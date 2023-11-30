@@ -1,6 +1,6 @@
 # Bookmyshow Case Study
 
-This Node.js Fastify application functions as a RESTful API for the bookmyshow case study, intergrated mysql database for persistent storage of data with schema level validation done using inbuilt fastify plugin's. The API offers a range of features, including user management (creation and authentication) with role's available as admin and customer. As an admin user, he has access for creation of resources such as movies, seats, theaters, city etc; For the customer(user) they can search for a particular movie via a theater or find theater via a movie get their info and proceed to booking.
+This Node.js Fastify application functions as a RESTful API for the bookmyshow case study, intergrated mysql database for persistent storage of data with schema level validation done using inbuilt fastify plugin's. The API offers a range of features, including user management (creation and authentication) with role's available as admin and customer. As an admin user, he has access for creation of resources such as movies, seats, theaters, city etc; For the customer(user) they can search for a particular movie via a theater or find theater via a movie get their info and proceed to booking and confirmation of ticket.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ This Node.js Fastify application functions as a RESTful API for the bookmyshow c
 - User Interactions: Users can search for a particular movie via a theater or find theater via a movie and get their info and proceed to booking.
 - Caching: Data fetched from APIs are cached using Redis for optimized performance.
 - Payment: Using stripe for payment gateway and included webhooks for further operations in our db when payment completes
-- Simple UI only for stripe payment integration is avaialble
+- Simple UI only for stripe payment integration is avaialble via static url http://localhost:3000/public/index.html
 
 ## Prerequisites
 
