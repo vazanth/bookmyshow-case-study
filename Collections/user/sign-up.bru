@@ -1,0 +1,22 @@
+meta {
+  name: sign-up
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/api/users/sign-up
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "name": "newtest",
+      "email": "new2@gmail.com",
+      "mobile": 8523690147,
+      "password": "Test12@4",
+      "city_id": 107,
+      "role": "customer"
+  }
+}

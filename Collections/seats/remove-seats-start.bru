@@ -1,0 +1,21 @@
+meta {
+  name: remove-seats-start
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:3000/api/seats/remove-expired-seats/start
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMDAsInBhc3N3b3JkIjoiJGFyZ29uMmlkJHY9MTkkbT02NTUzNix0PTMscD00JEJ3K2RvN2V5YnNnYzkwbmMyTGpCUkEkOHB5MkJpSmpWU0wwaW51cFQzb0VoUDdZbDcxcld0RWRXMjFvMGI4ak5rNCIsIm5hbWUiOiJhZG1pbnVzZXIiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsIm1vYmlsZSI6Ijk4NzQ1NjMyMTAiLCJjaXR5X2lkIjoxMDAsInJvbGUiOiJhZG1pbiIsImlhdCI6MTcwMDcxNzYzMX0.2boxm3048IS7itLgozHJ1sqEMbyNePCiV6G_egZA4U0
+}
+
+body:json {
+  {
+    "hour": "23"
+  }
+}
